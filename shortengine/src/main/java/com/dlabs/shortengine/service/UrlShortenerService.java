@@ -1,41 +1,35 @@
 package com.dlabs.shortengine.service;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
-
-import com.dlabs.shortengine.model.UrlMapping;
-import com.dlabs.shortengine.repository.UrlMappingRepository;
 
 @Service
 public class UrlShortenerService {
-    
+
     @Autowired
-    private UrlMappingRepository repository;
+    private StringRedisTemplate redisTemplate;
 
-    public String shortenUrl(String originalUrl) {
-        String code = generateShortCode();
-        UrlMapping mapping = new UrlMapping();
-        mapping.setOriginalUrl(originalUrl);
-        mapping.setShortCode(code);
-        mapping.setCreatedAt(LocalDateTime.now());
+    private static final String PREFIX = "shorturl:";
 
-        repository.save(mapping);
+    public String shortenUrl(String longUrl) {
+        // Generate code (could be any logic)
+        String code = generateCode(longUrl);
+
+        // Store code -> url mapping in Redis with an expiration time (optional)
+        redisTemplate.opsForValue().set(PREFIX + code, longUrl, 7, TimeUnit.SECONDS);
+
         return code;
     }
 
-    public String getOriginalUrl(String shortCode) {
-        return repository.findByShortCode(shortCode)
-                .map(UrlMapping::getOriginalUrl)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Short URL not found"));
-
+    public String getOriginalUrl(String code) {
+        return redisTemplate.opsForValue().get(PREFIX + code);
     }
 
-    private String generateShortCode() {
-        return UUID.randomUUID().toString().substring(0, 6); // Simple version
+    private String generateCode(String url) {
+        // Simple example: hashcode converted to hex, you can improve this
+        return Integer.toHexString(url.hashCode());
     }
 }

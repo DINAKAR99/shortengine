@@ -1,0 +1,14 @@
+{
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Spring Boot-ShortengineApplication<shortengine>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "mainClass": "com.dlabs.shortengine.ShortengineApplication",
+      "projectName": "shortengine",
+      "args": "",
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}
